@@ -12,23 +12,24 @@
 
 # Resumen
 
-Este repositorio contiene la implementación del proyecto de la materia Introducción a la Ciencia de Datos.
+Este repositorio contiene la implementación del proyecto de la materia Introducción a la Ciencia de Datos. Se pre-procesarán y aplicarán técnicas de clusterización y de clasificación a diversos datasets.
 
 # Archivos que contiene el repositorio
 
 El siguiente repositorio contiene las siguientes carpetas con los diversos archivos:
 
 ```
-mineria-de-datos-predictiva/
+proyecto-kaggle-titanic-josemalvarezg1/
 ├── data/
-│   ├── adult.data
-│   └── adult.test
+│   ├── train.csv 
+│	├── test.csv    
+│   └── titanic.raw.rdata
 ├── doc/
-│   ├── Tarea 3 Mineria de Datos Predictiva.pdf
-│   └── Tarea3.pdf
+│   ├── Proyecto.pdf
+│   └── Informe.pdf
 └── src/  
-    ├── Tarea3.r
-	└── Tarea3.Rmd
+    ├── Proyecto.r
+	└── Informe.Rmd
 
 ```
 
@@ -45,8 +46,9 @@ Los conjuntos de datos utilizados fueron los siguientes:
 
 | Dataset                        		 |       
 |----------------------------------------|
-|  adult.data               	 		 | 		
-|  adult.test                			 | 
+|  train.csv              	 		     | 		
+|  test.csv                			     | 
+|  titanic.raw.rdata              		 | 
 
 # Inicialización
 Se deberá descargar el siguiente repositorio o clonarlo con el comando:
