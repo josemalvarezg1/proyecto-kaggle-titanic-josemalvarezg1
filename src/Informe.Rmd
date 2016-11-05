@@ -1,0 +1,344 @@
+---
+title: "Proyecto - Kaggle Titanic"
+author: "José Manuel Alvarez García"
+date: "Noviembre 06, 2016"
+output: pdf_document
+---
+options(Encoding="UTF-8")
+Para instalar el paquete knit se debe ejecutar lo siguiente:
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+install = function(pkg)
+{
+  # Si ya está instalado, no lo instala.
+  if (!require(pkg, character.only = TRUE)) {
+    install.packages(pkg)
+    if (!require(pkg, character.only = TRUE)) stop(paste("load failure:", pkg))
+  }
+}
+```
+
+Inicialmente se debe estar posicionado en el directorio de la tarea:
+```{r}
+setwd("C:/Users/José Manuel/Documents/ICD/proyecto-kaggle-titanic-josemalvarezg1")
+```
+
+# Análisis exploratorio.
+
+OJO. Se trabajará con un dataset que contiene la base de datos de un censo realizado en 1994, y se tiene como clase principal o variable predictora si una persona tiene ingresos superiores a 50 mil dólares al año (>50K) o no   (<=50K).
+
+En el mismo también se tiene el siguiente conjunto de atributos (columnas):
+
+1. age: Representa la edad de una persona. Puede tomar cualquier valor entero.
+
+2. workclass: Representa la clase o tipo de trabajo de una persona. Puede tomar los siguientes valores: Private, Self-emp-not-inc, Self-emp-inc, Federal-gov, Local-gov, State-gov, Without-pay, Never-worked. 
+
+3. fnlwgt: Representa el peso final de sampling al encuestar a una persona. Puede tomar cualquier valor entero.
+
+4. education: Representa el nivel de educación de una persona. Puede tomar los siguientes valores: Bachelors, Some-college, 11th, HS-grad, Prof-school, Assoc-acdm, Assoc-voc, 9th, 7th-8th, 12th, Masters, 1st-4th, 10th, Doctorate, 5th-6th, Preschool. 
+
+5. education-num: Representa el nivel de educación de una persona (cualquiera de los posibles anteriores) en número entero.
+
+6. marital-status: Representa el estado civil de una persona. Puede tomar los siguientes valores: Married-civ-spouse, Divorced, Never-married, Separated, Widowed, Married-spouse-absent, Married-AF-spouse. 
+
+7. occupation: Representa la ocupación actual de una persona. Puede tomar los siguientes valores: Tech-support, Craft-repair, Other-service, Sales, Exec-managerial, Prof-specialty, Handlers-cleaners, Machine-op-inspct, Adm-clerical, Farming-fishing, Transport-moving, Priv-house-serv, Protective-serv, Armed-Forces. 
+
+8. relationship: Representa la relación actual de una persona. Puede tomar los valores siguientes: Wife, Own-child, Husband, Not-in-family, Other-relative, Unmarried. 
+
+9. race: Representa la raza de una persona. Puede tomar los valores siguientes: White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black.
+
+10. sex: Representa el género de una persona. Puede tomar los siguientes valores: Female, Male. 
+
+11. capital-gain: Representa la ganancia capital anual de una persona. Puede tomar cualquier valor numérico.
+
+12. capital-loss: Representa la pérdida capital anual de una persona. Puede tomar cualquier valor numérico.
+
+13. hours-per-week: Representa las horas semanales en las que trabaja una persona. Puede tomar cualquier valor entero.
+
+14. native-country: Representa el país natal de una persona. Puede tomar los valores siguientes: United-States, Cambodia, England, Puerto-Rico, Canada, Germany, Outlying-US(Guam-USVI-etc), India, Japan, Greece, South, China, Cuba, Iran, Honduras, Philippines, Italy, Poland, Jamaica, Vietnam, Mexico, Portugal, Ireland, France, Dominican-Republic, Laos, Ecuador, Taiwan, Haiti, Columbia, Hungary, Guatemala, Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands.
+
+Posteriormente, estas columnas serán renombradas en la tarea de pre-procesamiento.
+
+Si se desea realizar un análisis exploratorio para estudiar más a fondo el dataset se debe realizar lo siguiente: 
+```{r, warning=FALSE}
+library(FactoMineR)
+#Se muestras valores de interés del dataset
+# head(adults)
+# dim(adults)
+# names(adults)
+# str(adults)
+# attributes(adults)
+# summary(adults)
+# pca <- PCA(adults)
+```
+
+# Pre-Procesamiento.
+
+Inicialmente se debe leer el dataset de training:
+```{r}
+train = read.csv(file = "../data/train.csv", header = T)
+```
+Luego se debe leer el dataset testing:
+```{r}
+test = read.csv(file = "../data/test.csv", header = T)
+```
+Se identificarán las columnas de ambos datasets de la siguiente manera:
+```{r}
+colnames(train) <- c("ID", "Sobrevivio", "Clase", "Nombre", "Sexo", "Edad", "Hermanos/Cónyuges", "Padres/Niños", "Ticket", "Tarifa", "Cabina", "Embarcación")
+colnames(test) <- c("ID", "Clase", "Nombre", "Sexo", "Edad", "Hermanos/Cónyuges", "Padres/Niños", "Ticket", "Tarifa", "Cabina", "Embarcación")
+```
+Se elimina la primera columna (ID) de los datasets. Es considerada innecesaria ya que el ID de cada pasajero es su mismo número de registro (fila) en el dataset.
+```{r}
+train = train[,-1]
+test = test[,-1]
+```
+Algunos elementos de la columna "Edad" son desconocidos y contienen valores N/A. Por lo que se calcula la edad promedio y es colocada a los N/A.
+```{r}
+train[,5][is.na(train[, 5])] <- 0
+train[,5][train[, 5] == 0] <- ceiling(mean(train[["Edad"]]))
+```
+Los valores de la columna "Sexo" son cambiados a numéricos. Para que así se identifiquen como Male = 0 y Female = 1.
+```{r}
+train$Sexo = (train$Sexo=="female")*1
+```
+
+# K-Medias.
+Para aplicar la técnica de clusterización K-Medias, se trabajará sólo con la columna "Edad".
+```{r}
+trainK = train[,c(5)]
+```
+Ahora bien, se buscará el K más adecuado para aplicar la técnica. Esto se realizará mediante el Codo de Jambu:
+```{r, warning=FALSE}
+InerciaIC = rep(0,50)
+for (k in 1:50) {
+  grupos = kmeans(trainK, k)
+  InerciaIC[k] = grupos$tot.withinss
+}
+```
+Si se grafica la Inercia Inter-Clases se puede observar que cambia muy poco a partir de K=4 y K=5
+```{r}
+plot(InerciaIC, col = "blue", type = "b")
+```
+
+Por lo que calcula K-Medias con K=5 y 100 iteraciones, y se grafica: 
+```{r}
+clusters <- kmeans(trainK, 5, iter.max = 100) 
+plot(trainK, pch = 20)
+plot(trainK, col = clusters$cluster)
+```
+
+# Clasificación Jerárquica.
+
+Se trabajará el dataset pre-procesado anteriormente como una matriz y luego se calculará la matriz de distancia:
+```{r}
+datos = as.matrix(trainK)
+distancia = dist(datos)
+```
+
+Se aplicarán y se graficarán los métodos de clasificación jerárquica.
+Para el método Complete:
+```{r}
+cluster = hclust(distancia, method = "complete")
+plot(cluster)
+#Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
+corteD = cutree(cluster, k = 5)
+#Observamos la cantidad de clusters.
+unique(corteD)
+#Graficamos los clusters.
+plot(trainK, col = corteD, main = "COMPLETE")
+```
+
+Para el método Single:
+```{r}
+cluster = hclust(distancia, method = "single")
+plot(cluster)
+#Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
+corteD = cutree(cluster, k = 5)
+#Observamos la cantidad de clusters
+unique(corteD)
+#Graficamos los clusters.
+plot(trainK, col = corteD, main = "SINGLE")
+```
+
+Para el método Average:
+```{r}
+cluster = hclust(distancia, method = "average")
+plot(cluster)
+#Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
+corteD = cutree(cluster, k = 5)
+#Observamos la cantidad de clusters.
+unique(corteD)
+#Graficamos los clusters.
+plot(trainK, col = corteD, main = "AVERAGE")
+```
+
+Para el método Ward:
+```{r}
+cluster = hclust(distancia, method = "ward.D")
+plot(cluster)
+#Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
+corteD = cutree(cluster, k = 5)
+#Observamos la cantidad de clusters.
+unique(corteD)
+#Graficamos los clusters.
+plot(trainK, col = corteD, main = "WARD")
+```
+
+Se puede observar que la clasificación por el método Ward es la que más se adapta al clustering del dataset utilizando K-Medias con K=5.
+
+# Reglas de Asociación.
+Se deben incluir las bibliotecas "arules" y "arulesViz" de la siguiente manera:
+```{r, warning=FALSE, message=FALSE}
+library(arules)
+library(arulesViz)
+```
+Para leer el dataset Titanic Raw se debe ejecutar lo siguiente:
+```{r, warning=FALSE}
+load("../data/titanic.raw.Rdata")
+str(titanic.raw)
+#Se transforma dataframe en transaccional.
+trans <- as(titanic.raw, "transactions")
+```
+
+Seguidamente, ya teniendo el dataset como valores transaccionales se generan las reglas de asociación y se muestra un resumen de las mismas:
+```{r}
+reglas <- apriori(trans)
+summary(reglas)
+```
+
+Para conocer las 10 transacciones con mayor número de apariciones en el dataset se realiza lo siguiente:
+```{r}
+itemFrequencyPlot(trans,topN=10,type="absolute")
+```
+
+Para ordenar las reglas se tiene lo siguiente:
+```{r}
+#Se ordenan las reglas por confianza
+confianzaAlta <-sort(reglas, by="confidence", decreasing=TRUE)
+inspect(head(confianzaAlta))
+```
+Se observa que las primeras seis reglas tienen una confianza de 1, por lo que estas siempre serán verídicas.
+
+```{r}
+#Se ordenan las reglas por soporte
+supportAlto <-sort(reglas, by="support", decreasing=TRUE)
+inspect(head(supportAlto))
+```
+Se observa que las primeras seis reglas son las que más frecuentan en el dataset.
+
+```{r}
+#Se ordenan las reglas por lift
+liftAlto <-sort(reglas, by="lift", decreasing=TRUE)
+inspect(head(liftAlto))
+```
+Se observa que las primeras seis reglas son las más probables en ocurrir.
+
+OJO. Explicar apariciones de estas reglas.
+
+# Árboles de Decisión
+Se cargan las bibliotecas para la utilización del método de clasificación de árboles de decisión:
+```{r, warning=FALSE}
+library("rpart")
+library("rpart.plot")
+```
+Para esta técnica se trabajará sólo con las columnas "Sobrevivio", "Clase", "Sexo", "Edad", "Hermanos/Cónyugues", "Padres/Niños" y "Tarifa".
+```{r}
+trainT <- subset(train, select = c(1,2,4,5,6,7,9))
+```
+Se obtiene el árbol de decisión en base a la columna Clase del dataset y se grafica:
+```{r}
+tree <- rpart(Sobrevivio ~ ., trainT, method = "class")
+rpart.plot(tree)
+```
+Se muestran las predicciones en base al árbol anteriormente generado:
+```{r}
+p <- predict(tree, trainT, type="class")
+table(trainT[,1], p)
+```
+
+# Máquinas de Soporte Vectorial
+Se debe incluir la biblioteca "e1071" de la siguiente manera:
+```{r, warning=FALSE}
+library("e1071")
+```
+Para esta técnica se trabajará sólo con las columnas "Sobrevivio", "Clase", "Sexo", "Edad", "Hermanos/Cónyugues", "Padres/Niños" y "Tarifa" para el conjunto de Training; y las mismas para uno segundo sin incluir la columna "Sobrevivio".
+```{r}
+trainSVM <- subset(train, select = c(1,2,4,5,6,7,9))
+trainSVM2 <- subset(train, select = c(2,4,5,6,7,9))
+```
+
+Ahora bien, se debe entrenar el modelo probando diferentes kernels.
+Se entrena el modelo con el kernel "sigmoid".
+```{r}
+svm_model <- svm(Sobrevivio ~ .,kernel="sigmoid",data = trainSVM)
+pred <- predict(svm_model,trainSVM2)
+pred <- replace(pred, pred < 0.5, 0)
+pred <- replace(pred, pred >= 0.5, 1)
+```
+Se muestra la matriz de confusión.
+```{r}
+table(pred, trainSVM$Sobrevivio)
+```
+
+Se entrena el modelo con el kernel "radial".
+```{r}
+svm_model <- svm(Sobrevivio ~ .,kernel="radial",data = trainSVM)
+pred <- predict(svm_model,trainSVM2)
+pred <- replace(pred, pred < 0.5, 0)
+pred <- replace(pred, pred >= 0.5, 1)
+```
+Se muestra la matriz de confusión.
+```{r}
+table(pred, trainSVM$Sobrevivio)
+```
+
+Se entrena el modelo con el kernel "polynomial".
+```{r}
+svm_model <- svm(Sobrevivio ~ .,kernel="polynomial",data = trainSVM)
+pred <- predict(svm_model,trainSVM2)
+pred <- replace(pred, pred < 0.5, 0)
+pred <- replace(pred, pred >= 0.5, 1)
+```
+Se muestra la matriz de confusión.
+```{r}
+#Se muestra la matriz de confusión.
+table(pred, trainSVM$Sobrevivio)
+```
+
+Se entrena el modelo con el kernel "linear".
+```{r}
+svm_model <- svm(Sobrevivio ~ .,kernel="linear",data = trainSVM)
+pred <- predict(svm_model,trainSVM2)
+pred <- replace(pred, pred < 0.5, 0)
+pred <- replace(pred, pred >= 0.5, 1)
+```
+Se muestra la matriz de confusión.
+```{r}
+table(pred, trainSVM$Sobrevivio)
+```
+
+El mejor método fue "radial", por lo que se afina el modelo considerando este kernel.
+```{r}
+svm_tune <- 0
+svm_tune <- tune(svm, train.x=trainSVM, train.y=trainSVM2, kernel="radial", ranges= list(cost = c(0.1, 1, 10, 100, 1000), gamma = c(0.5, 1, 2, 3, 4)))
+print(svm_tune)
+```
+Ahora, se evalúa el modelo luego de afinarlo y conseguir el cost y gamma óptimos. OJO.
+```{r}
+svm_model_after_tune <- svm(Sobrevivio ~ ., kernel="radial", data = trainSVM, cost=1, gamma=0.5)
+summary(svm_model_after_tune)
+pred <- predict(svm_model_after_tune,trainSVM2)
+pred <- replace(pred, pred < 0.5, 0)
+pred <- replace(pred, pred >= 0.5, 1)
+```
+Se muestra la matriz de confusión.
+```{r}
+table(pred,trainSVM$Sobrevivio)
+```
+
+# Curvas ROC
+Se debe incluir la biblioteca "ROCR" de la siguiente manera:
+```{r, warning=FALSE}
+library("ROCR")
+```
+

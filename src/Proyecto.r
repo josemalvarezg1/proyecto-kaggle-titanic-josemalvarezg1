@@ -24,9 +24,8 @@ train$Sexo = (train$Sexo=="female")*1
 
 # ------- K-Medias ------- 
 
-#Se trabajará sólo con las columnas "Sobrevivió", "Clase", "Sexo", "Edad", "Hermanos/Cónyugues" y "Padres/Niños".
-trainK = train[,c(1,2,4,5,6,7)]
-plot(trainK, pch = 19)
+#Se trabajará sólo con la columna "Edad".
+trainK = train[,c(5)]
 
 #Se aplica el Codo de Jambu para obtener el K más adecuado al método de K-Medias.
 InerciaIC = rep(0,50)
@@ -37,15 +36,15 @@ for (k in 1:50) {
 
 #Se grafica la Inercia Inter-Clases.
 plot(InerciaIC, col = "blue", type = "b")
-#Se puede observar que cambia muy poco a partir de K=2 y K=3.
+#Se puede observar que cambia muy poco a partir de K=4 y K=5.
 
-#Se calcula K-Medias con K=3 y 100 iteraciones.
-clusters <- kmeans(trainK, 3, iter.max = 100) 
+#Se calcula K-Medias con K=5 y 100 iteraciones.
+clusters <- kmeans(trainK, 5, iter.max = 100) 
 
 #Se grafica el dataset inicial.
 plot(trainK, pch = 20)
 
-#Se colorean los tres grupos en el gráfico.
+#Se colorean los cinco grupos en el gráfico.
 plot(trainK, col = clusters$cluster)
 
 # ------- Clasificación Jerárquica ------- 
@@ -59,7 +58,7 @@ distancia = dist(datos)
 cluster = hclust(distancia, method = "complete")
 plot(cluster)
 #Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
-corteD = cutree(cluster, k = 3)
+corteD = cutree(cluster, k = 5)
 #Observamos la cantidad de clusters.
 unique(corteD)
 #Graficamos los clusters.
@@ -69,7 +68,7 @@ plot(trainK, col = corteD, main = "COMPLETE")
 cluster = hclust(distancia, method = "single")
 plot(cluster)
 #Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
-corteD = cutree(cluster, k = 3)
+corteD = cutree(cluster, k = 5)
 #Observamos la cantidad de clusters
 unique(corteD)
 #Graficamos los clusters.
@@ -79,7 +78,7 @@ plot(trainK, col = corteD, main = "SINGLE")
 cluster = hclust(distancia, method = "average")
 plot(cluster)
 #Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
-corteD = cutree(cluster, k = 3)
+corteD = cutree(cluster, k = 5)
 #Observamos la cantidad de clusters.
 unique(corteD)
 #Graficamos los clusters.
@@ -89,7 +88,7 @@ plot(trainK, col = corteD, main = "AVERAGE")
 cluster = hclust(distancia, method = "ward.D")
 plot(cluster)
 #Se determina la altura requerida con k clusters, cortando el dendograma con k clases:
-corteD = cutree(cluster, k = 3)
+corteD = cutree(cluster, k = 5)
 #Observamos la cantidad de clusters.
 unique(corteD)
 #Graficamos los clusters.
