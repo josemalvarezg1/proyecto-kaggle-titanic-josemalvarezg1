@@ -319,10 +319,12 @@ table(pred, trainSVM$Sobrevivio)
 El mejor método fue "radial", por lo que se afina el modelo considerando este kernel.
 ```{r}
 svm_tune <- 0
-svm_tune <- tune(svm, train.x=trainSVM, train.y=trainSVM2, kernel="radial", ranges= list(cost = c(0.1, 1, 10, 100, 1000), gamma = c(0.5, 1, 2, 3, 4)))
+x <- subset(trainSVM, select = -Sobrevivio)
+y <- trainSVM$Sobrevivio
+svm_tune <- tune(svm, train.x=x, train.y=y, kernel="radial", ranges=list(cost=10^(-1:2), gamma=c(.5,1,2)))
 print(svm_tune)
 ```
-Ahora, se evalúa el modelo luego de afinarlo y conseguir el cost y gamma óptimos. OJO.
+Ahora, se evalúa el modelo luego de afinarlo y conseguir el cost y gamma óptimos.
 ```{r}
 svm_model_after_tune <- svm(Sobrevivio ~ ., kernel="radial", data = trainSVM, cost=1, gamma=0.5)
 summary(svm_model_after_tune)
