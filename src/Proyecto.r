@@ -22,6 +22,21 @@ train[,5][train[, 5] == 0] <- ceiling(mean(train[["Edad"]]))
 #Cambiar sexo a numérico. Male = 0, Female = 1.
 train$Sexo = (train$Sexo=="female")*1
 
+#Parte del análisis exploratorio.
+library(FactoMineR)
+
+#Se muestran valores de interés del dataset de entrenamiento.
+head(train)
+dim(train)
+names(train)
+summary(train)
+
+#Se trabajará sólo con las columnas "Sobrevivió", "Clase", "Sexo", "Edad", "Hermanos/Cónyugues", "Padres/Niños" y "Tarifa".
+titanicPCA <- subset(train, select = c(1,2,4,5,6,7,9))
+
+#Se grafica el PCA.
+pca <- PCA(titanicPCA)
+
 # ------- K-Medias ------- 
 
 #Se trabajará sólo con la columna "Edad".
