@@ -218,23 +218,21 @@ Para ordenar las reglas se tiene lo siguiente:
 confianzaAlta <-sort(reglas, by="confidence", decreasing=TRUE)
 inspect(head(confianzaAlta))
 ```
-Se observa que las primeras seis reglas tienen una confianza de 1, por lo que estas siempre serán verídicas.
+Se observa que por las primeras seis reglas, las cuales tienen una confianza de 1 o muy cercana a 1, siempre será verídico considerar que una persona perteneciente a la tripulación del Titanic del género masculino que no haya sobrevivido sea un adulto (100%); o que una persona adulta perteneciente a la tripulación del Titanic y que no haya sobrevivido sea del género masculino (99%). El porcentaje es medido en confianza.
 
 ```{r}
 #Se ordenan las reglas por soporte
 supportAlto <-sort(reglas, by="support", decreasing=TRUE)
 inspect(head(supportAlto))
 ```
-Se observa que las primeras seis reglas son las que más frecuentan en el dataset.
+Se observa que las primeras seis reglas son las que más frecuentan en el dataset; en estas se puede notar que si una persona no sobrevivió fue porque era un adulto (65%) o era del género masculino (61%); o que si una persona del género masculino que no sobrevivió fue porque era un adulto (60%); o si una persona adulta que no sobrevivió fue porque era del género masculino (60%). El porcentaje es medido en soporte.
 
 ```{r}
 #Se ordenan las reglas por lift
 liftAlto <-sort(reglas, by="lift", decreasing=TRUE)
 inspect(head(liftAlto))
 ```
-Se observa que las primeras seis reglas son las más probables en ocurrir.
-
-OJO. Explicar apariciones de estas reglas.
+Se observa que las primeras seis reglas son las más probables en ocurrir; en estas se puede notar que si una persona no sobrevivió y pertenecía a la tripulación fue porque o era del género masculino; o si era una persona adulta del género masculino perteneciente a la 3ra clase pasajera, entonces no sobrevivió. 
 
 # Árboles de Decisión
 Se cargan las bibliotecas para la utilización del método de clasificación de árboles de decisión:
