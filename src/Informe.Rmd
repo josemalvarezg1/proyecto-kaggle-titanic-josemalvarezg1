@@ -64,8 +64,12 @@ test = read.csv(file = "../data/test.csv", header = T)
 ```
 Se identificarán las columnas de ambos datasets de la siguiente manera:
 ```{r}
-colnames(train) <- c("ID", "Sobrevivio", "Clase", "Nombre", "Sexo", "Edad", "Hermanos/Cónyuges", "Padres/Niños", "Ticket", "Tarifa", "Cabina", "Embarcación")
-colnames(test) <- c("ID", "Clase", "Nombre", "Sexo", "Edad", "Hermanos/Cónyuges", "Padres/Niños", "Ticket", "Tarifa", "Cabina", "Embarcación")
+colnames(train) <- c("ID", "Sobrevivio", "Clase", "Nombre", "Sexo", "Edad", 
+                     "Hermanos/Cónyuges", "Padres/Niños", "Ticket", "Tarifa", 
+                     "Cabina", "Embarcación")
+colnames(test) <- c("ID", "Clase", "Nombre", "Sexo", "Edad", 
+                    "Hermanos/Cónyuges", "Padres/Niños", "Ticket", "Tarifa", 
+                    "Cabina", "Embarcación")
 ```
 Se elimina la primera columna (ID) de los datasets. Es considerada innecesaria ya que el ID de cada pasajero es su mismo número de registro (fila) en el dataset.
 ```{r}
@@ -86,6 +90,9 @@ Si se desea realizar un análisis exploratorio para estudiar más a fondo el dat
 ```{r, warning=FALSE}
 library(FactoMineR)
 ```
+
+\newpage
+
 Se muestran valores de interés del dataset de entrenamiento:
 ```{r}
 head(train)
@@ -234,6 +241,8 @@ inspect(head(liftAlto))
 ```
 Se observa que las primeras seis reglas son las más probables en ocurrir; en estas se puede notar que si una persona no sobrevivió y pertenecía a la tripulación fue porque o era del género masculino; o si era una persona adulta del género masculino perteneciente a la 3ra clase pasajera, entonces no sobrevivió. 
 
+\newpage
+
 # Árboles de Decisión
 Se cargan las bibliotecas para la utilización del método de clasificación de árboles de decisión:
 ```{r, warning=FALSE}
@@ -338,8 +347,24 @@ table(pred,trainSVM$Sobrevivio)
 ```
 
 # Curvas ROC
-Se debe incluir la biblioteca "ROCR" de la siguiente manera:
+Se debe incluir la biblioteca "pROC" de la siguiente manera:
 ```{r, warning=FALSE}
-library("ROCR")
+library("pROC")
 ```
 
+Se evaluará y se graficará la curva ROC para árboles de decisión como sigue:
+```{r}
+pTree <- as.numeric(p)
+pTree = (pTree==2)*1
+svmTree <- roc(train$Sobrevivio, pred)
+plot(svmTree, type = "l", col = "green")
+```
+
+Ahora evaluará y se graficará la curva ROC para el modelo SVM:
+```{r}
+pred <- as.numeric(pred)
+svmROC <- roc(train$Sobrevivio, pred)
+plot(svmROC, type = "l", col = "green")
+```
+
+Finalmente, se tiene que el área bajo la curva ROC es de 0.8245, por lo que para ambos modelos se predecirá con un 82% la supervivencia de una persona en la tragedia del Titanic.

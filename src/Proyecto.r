@@ -158,50 +158,6 @@ rpart.plot(tree)
 p <- predict(tree, trainT, type="class")
 table(trainT[,1], p)
 
-# ------- Curvas ROC ------- 
-
-library("ROCR")
-
-#Se trabajará sólo con las columnas "Sobrevivió", "Clase", "Edad", "Hermanos/Cónyugues", "Padres/Niños" y "Tarifa".
-trainT <- subset(train, select = c(1,2,5,6,7,9))
-#Se trabajará sólo con las columnas "Clase", "Edad", "Hermanos/Cónyugues", "Padres/Niños" y "Tarifa".
-testT <- subset(test, select = c(2,5,6,7,9))
-
-set.seed(1)
-#Se obtiene el árbol de decisión nuevamente. OJO.
-tree <- rpart(Sobrevivió ~ ., trainT, method = "class")
-prob <- predict(tree, testT, type = "prob")[,1]
-prob_tree <- prob
-pred <- prediction(prob,testT$Sobrevivió)
-
-#Se obtiene la tasa de verdaderos y falsos positivos
-perf <- performance(pred,"tpr","fpr")
-
-#Se grafica la tasa anterior
-plot(perf)
-
-#Se obtiene el área bajo la curva
-set.seed(1)
-tree <- rpart(Sobrevivió ~ ., trainT, method = "class")
-prob <- predict(tree, testT, type = "prob")[,2]
-prob_curve <- prob
-pred <- prediction(prob,testT$Sobrevivió)
-
-perf <- performance(pred,"auc")
-#Se obtiene el porcentaje de precisión
-perf@y.values[[1]] * 100
-
-#Se comparan los métodos
-pred_tree <- prediction(prob_tree,testT$Sobrevivió)
-pred_curve <- prediction(prob_curve,testT$Sobrevivió)
-
-perf_tree <- performance(pred_tree,"tpr","fpr")
-perf_curve <- performance(pred_curve,"tpr","fpr")
-
-#Se grafica el desempeño de ambos métodos
-plot(perf_tree)
-plot(perf_curve)
-
 # ------- Máquinas de Soporte Vectorial ------- 
 
 library("e1071")
@@ -273,5 +229,19 @@ pred <- replace(pred, pred >= 0.5, 1)
 table(pred,trainSVM$Sobrevivió)
 
 
+# ------- Curvas ROC ------- 
+
+library("pROC")
+
+#Se evalúa y se grafica la curva ROC para árboles de decisión.
+pTree <- as.numeric(p)
+pTree = (pTree==2)*1
+svmTree <- roc(train$Sobrevivió, pred)
+plot(svmTree, type = "l", col = "green")
+
+#Se evalúa y se grafica la curva ROC para el modelo SVM.
+pred <- as.numeric(pred)
+svmROC <- roc(train$Sobrevivió, pred)
+plot(svmROC, type = "l", col = "green")
 
 
